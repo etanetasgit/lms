@@ -40,7 +40,6 @@ class Session
     public function __construct(&$DB, $timeout = 600)
     {
         global $LMS;
-
         session_start();
         $this->db = &$DB;
         $this->pin_allowed_characters = ConfigHelper::getConfig('phpui.pin_allowed_characters', '0123456789');
@@ -133,6 +132,48 @@ class Session
         } elseif ($this->passwd) {
             $authdata = $this->VerifyPassword();
         }
+
+        //facebook auth plugin
+        if(isset($_GET['fbredirurl'])){
+            $fb = new FBOAuth($this->db);
+            if(ConfigHelper::getConfig('userpanel.google_recaptcha_sitekey')){
+                $_POST["g-recaptcha-response"] = $_GET["g-recaptcha-response"];
+                if ($this->ValidateRecaptchaResponse()){
+                    $fburl = $fb->GenCallbackURL();
+                    echo $fburl;
+                } else {
+                    http_response_code(403);
+                    echo trans("Captcha validation failed");
+                }
+                $this->db->Destroy();
+                exit();
+            } else {
+                $fburl = $fb->GenCallbackURL();
+                echo $fburl;
+                $this->db->Destroy();
+                exit();
+            }
+        } //facebookredir
+
+        //facebook auth plugin
+        if(isset($_GET['callback'])){
+            try{
+                if($_GET['callback']=="facebook"){
+                    $fb = new FBOAuth($this->db, $this);
+                    $_SESSION['session_timestamp'] = time();
+                    $authdata = $fb->Auth();
+                    $this->login = $authdata['id'];
+                    $this->passwd = $authdata['passwd'];
+                    $this->id = $authdata['id'];
+                } elseif ($_GET['callback'] == "fbmailvalidate") {
+                    $fb = new FBOAuth($this->db);
+                    $fb->ValidateEmail($_GET['token']);
+                }
+            } catch (Exception $fbError){
+                $this->error = trans("There was an error connecting to facebook, please try again later");
+                error_log($fbError);
+            }
+        } //facebook callback
 
         if ($authdata != null) {
             $authinfo = $this->GetCustomerAuthInfo($authdata['id']);

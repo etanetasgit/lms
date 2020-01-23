@@ -1,0 +1,209 @@
+<style>
+  ._29o8 {
+    padding: 0.4em;
+    display: inline-block;
+  }
+  ._5h0c._5h0g {
+    border-radius: 3px;
+    max-width: 200px;
+  }
+  ._5h0c {
+    background-color: #e9ebee;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: top;
+  }
+  ._5h0g ._5h0i {
+    border-radius: 3px;
+    height: 20px;
+    width: auto;
+  }
+  ._5h0i._88va {
+    background-color: #1877f2;
+  }
+  ._5f0n {
+    table-layout: fixed;
+    width: 100%;
+  }
+  ._51mz {
+    border: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  ._5h0i {
+    background-color: #4267b2;
+    border-radius: 4px;
+    color: #fff;
+  }
+  ._5h0g ._5h0i td:first-child, ._5h0g ._xvp._5h0i td:last-child {
+    width: 20px;
+  }
+
+  ._51mz ._51m-:first-child {
+    padding-left: 0;
+  }
+  ._51mx:first-child>._51m- {
+    padding-top: 0;
+  }
+  ._5h0c ._5h0j {
+    overflow: none;
+    white-space: nowrap;
+  }
+  ._5h0g ._88va ._5h0k {
+    margin: 4px 4px 4px 8px;
+  }
+
+  ._5h0g ._5h0k {
+    height: 12px;
+    margin: 4px;
+  }
+  ._5h0c ._5h0k {
+    float: left;
+  }
+
+  ._51mx:first-child>._51m- {
+    padding-top: 0;
+  }
+
+  ._51mz ._51mw {
+    padding-right: 0;
+  }
+
+  ._5h0g ._8kto {
+    font-weight: bold;
+    padding-top: 2px;
+  }
+
+  ._5h0g ._5h0o {
+    font-size: 11px;
+    max-width: 150px;
+    padding: 0 8px 0 2px;
+  }
+  ._5h0o {
+    border: none;
+    font-family: Helvetica, Arial, sans-serif;
+    letter-spacing: .25px;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+  ._5h0g ._5h0i td:first-child, ._5h0g ._xvp._5h0i td:last-child {
+    width: 20px;
+  }
+
+  ._51mz ._51m-:first-child {
+    padding-left: 0;
+  }
+  ._51mx:last-child>._51m- {
+    padding-bottom: 0;
+  }
+  ._5h0k img{
+    vertical-align: inherit;
+  }
+</style>
+<div>
+  <div class="_xvm _29o8" id="u_0_1">
+    <div id="fbLoginBtn" class="_5h0c _5h0g" style="" role="button" tabindex="0">
+      <table class="uiGrid _51mz _5h0i _88va _5f0n" cellspacing="0" cellpadding="0">
+        <tbody>
+          <tr class="_51mx">
+            <td class="_51m-">
+              <div class="_5h0j"><span class="_5h0k"><img class="img" src="https://www.facebook.com/rsrc.php/v3/yr/r/zSKZHMh8mXU.png" alt="" width="12" height="12"></span></div>
+            </td>
+            <td class="_51m- _51mw">
+              <div class="_5h0s">
+                <div class="_5h0o _8kto">{trans("Login with facebook")}</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="_51mx">
+            <td class="_51m-"><span class="_8jan"></span></td>
+            <td class="_51m-"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+
+  var messages = {
+    "en": {
+      "Captcha must be validated": "Captcha must be validated",
+      "Server error, try later": "Server error, try later",
+    },
+    "lt": {
+      "Captcha must be validated": "Captcha turi būti patvirtinta",
+      "Server error, try later": "Serverio klaida, bandykite vėliau",
+    },
+    "pl": {
+      "Captcha must be validated": "Captcha musi zostać zatwierdzona",
+      "Server error, try later": "Błąd serwera, spróbuj później",
+    }
+  }
+
+  function trans(message){
+    var userLang = navigator.language || navigator.userLanguage
+    var message = message;
+    var tmpMessage = "";
+
+    if(messages[userLang]){
+      tmpMessage = messages[userLang][message]
+    } else {
+      tmpMessage = messages['en'][message]
+    }
+
+    if(tmpMessage){
+      message = tmpMessage
+    }
+    return message
+  }
+
+  function showError(error){
+    var loginForm = document.getElementById("login");
+    var d = document.createElement("div");
+    d.style.color = "red";
+    d.setAttribute("id","fberror");
+    d.classList.add("text-center");
+    d.classList.add("bold");
+    d.innerHTML = error;
+    loginForm.before(d);
+  }
+
+  var fbLoginUrl = "";
+  var recaptchaValue = "";
+  var loginBtn = document.getElementById("fbLoginBtn");
+  loginBtn.addEventListener("click",function(){
+    errors = document.getElementById("fberror");
+    if(errors){
+      errors.remove();
+    }
+    var recaptcha = document.getElementById("g-recaptcha-response");
+    if(recaptcha && !recaptcha.value){
+      showError(trans("Captcha must be validated"));
+    } else {
+      var request = new XMLHttpRequest();
+      var url = "/?fbredirurl=1";
+      if(recaptcha && recaptcha.value){
+        url += "&g-recaptcha-response="+recaptcha.value;
+      }
+      request.open("GET", url);
+      request.addEventListener("readystatechange", function(){
+      {
+        if(request.readyState == 4 && request.status == 200){
+          if(request.status == 200){
+            fbLoginUrl = request.responseText
+            window.location.href = fbLoginUrl;
+          } else if (request.status = 403){
+            showError(request.responseText);
+          } else {
+            showError(trans("Server error, try later"));
+          }
+        }
+      }
+      });
+      request.send();
+    }
+  })
+</script>
