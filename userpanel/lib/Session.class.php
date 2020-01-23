@@ -40,7 +40,6 @@ class Session
     public function __construct(&$DB, $timeout = 600)
     {
         global $LMS;
-
         session_start();
         $this->db = &$DB;
         $this->pin_allowed_characters = ConfigHelper::getConfig('phpui.pin_allowed_characters', '0123456789');
@@ -133,6 +132,50 @@ class Session
         } elseif ($this->passwd) {
             $authdata = $this->VerifyPassword();
         }
+
+        //google redir
+        if(isset($_GET['googleredirurl'])){
+            $google = new GoogleOAuth($this->db);
+            if(ConfigHelper::getConfig('userpanel.google_recaptcha_sitekey')){
+                $_POST["g-recaptcha-response"] = $_GET["g-recaptcha-response"];
+                if ($this->ValidateRecaptchaResponse()){
+                    $url = $google->GenCallbackURL();
+                    echo $url;
+                } else {
+                    http_response_code(403);
+                    echo trans("Captcha validation failed");
+                }
+                $this->db->Destroy();
+                exit();
+            } else {
+                $url = $google->GenCallbackURL();
+                echo $url;
+                $this->db->Destroy();
+                exit();
+            }
+        }
+        //
+
+        //google callback handler
+        if(isset($_GET['callback'])){
+            try{
+                if($_GET['callback']=="google"){
+                    $google = new GoogleOAuth($this->db, $this);
+                    $_SESSION['session_timestamp'] = time();
+                    $authdata = $google->Auth();
+                    $this->login = $authdata['id'];
+                    $this->passwd = $authdata['passwd'];
+                    $this->id = $authdata['id'];
+                } elseif ($_GET['callback'] == "googlemailvalidate") {
+                    $google = new GoogleOAuth($this->db);
+                    $google->ValidateEmail($_GET['token']);
+                }
+            } catch (Exception $e){
+                $this->error = trans("There was an error connecting to Google, please try again later");
+                error_log($e);
+            }
+        }
+        //
 
         if ($authdata != null) {
             $authinfo = $this->GetCustomerAuthInfo($authdata['id']);
