@@ -108,6 +108,10 @@
 				<tr>
 					<td colspan="2" class="text-center">
 						<br /><input type="submit" name="loginform[submit]" class="bold" value="{trans("Login")}"{if $google_recaptcha_sitekey} disabled{/if} />
+						<br />
+						{if $google_auth_enabled}
+							{include file="googlebutton.html"}
+						{/if}
 					</td>
 				</tr>
 				<tr>
