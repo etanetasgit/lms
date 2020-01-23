@@ -24,6 +24,7 @@
  *  $Id$
  */
 
+
 // REPLACE THIS WITH PATH TO YOUR CONFIG FILE
 
 $CONFIG_FILE = (is_readable('lms.ini')) ? 'lms.ini' : DIRECTORY_SEPARATOR . 'etc' . DIRECTORY_SEPARATOR . 'lms' . DIRECTORY_SEPARATOR . 'lms.ini';
@@ -86,6 +87,7 @@ if (file_exists($composer_autoload_path)) {
 } else {
     die("Composer autoload not found. Run 'composer install' command from LMS directory and try again. More informations at https://getcomposer.org/");
 }
+
 
 require_once(USERPANEL_LIB_DIR . DIRECTORY_SEPARATOR . 'checkdirs.php');
 
@@ -310,9 +312,31 @@ if ($SESSION->islogged) {
         $_SESSION['lastmodule'] = $module;
     }
 } else {
-        $SMARTY->assign('error', $SESSION->error);
-        $SMARTY->assign('target', '?'.$_SERVER['QUERY_STRING']);
-        $SMARTY->display('login.html');
+    if(checkFacebookPluginEnabled()){
+        try{
+            $fbauth = new FBOAuth($DB);
+            $facebookUri = $fbauth->GenCallbackURL();
+            if($facebookUuri){
+                $SMARTY->assign("fb_login_url", $facebookUri);
+            }
+        } catch(Exception $fbe){
+            error_log($fbe);
+        }
+    } //checkFacebookPluginEnabled
+    $SMARTY->assign('error', $SESSION->error);
+    $SMARTY->assign('target', '?'.$_SERVER['QUERY_STRING']);
+    $SMARTY->display('login.html');
 }
+
+function checkFacebookPluginEnabled(){
+    global $DB;
+    $enabled = false;
+    $r = $DB->GetRow("select * from uiconfig where var = ?", array("plugins"));
+    if($r && preg_match("/.*FacebookAuth.*/", $r['value'])){
+        $enabled = true;
+    }
+    return $enabled;
+} //checkFacebookPluginEnabled
+
 
 $DB->Destroy();
