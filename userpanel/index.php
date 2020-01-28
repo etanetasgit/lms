@@ -320,6 +320,17 @@ if ($SESSION->islogged) {
             error_log($e);
         }
     }
+    if(checkFacebookPluginEnabled()){
+        try{
+            $fbauth = new FBOAuth($DB);
+            $facebookUri = $fbauth->GenCallbackURL();
+            if($facebookUuri){
+                $SMARTY->assign("fb_login_url", $facebookUri);
+            }
+        } catch(Exception $fbe){
+            error_log($fbe);
+        }
+    } //checkFacebookPluginEnabled
     $SMARTY->assign('error', $SESSION->error);
     $SMARTY->assign('target', '?'.$_SERVER['QUERY_STRING']);
     $SMARTY->display('login.html');
@@ -334,6 +345,15 @@ function checkGooglePluginEnabled(){
     }
     return $enabled;
 }
+function checkFacebookPluginEnabled(){
+    global $DB;
+    $enabled = false;
+    $r = $DB->GetRow("select * from uiconfig where var = ?", array("plugins"));
+    if($r && preg_match("/.*FacebookAuth.*/", $r['value'])){
+        $enabled = true;
+    }
+    return $enabled;
+} //checkFacebookPluginEnabled
 
 
 $DB->Destroy();
