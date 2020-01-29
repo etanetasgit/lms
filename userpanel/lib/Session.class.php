@@ -176,6 +176,7 @@ class Session
                 exit();
             }
         } //facebookredir
+        //
 
         //google callback handler
         if(isset($_GET['callback'])){
