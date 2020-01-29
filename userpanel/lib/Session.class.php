@@ -170,7 +170,7 @@ class Session
                     $fb->ValidateEmail($_GET['token']);
                 }
             } catch (Exception $fbError){
-                $this->error = trans("There was an error connecting to facebook, please try again later");
+                $this->error = trans("There was an error connecting to Facebook, please try again later");
                 error_log($fbError);
             }
         } //facebook callback
