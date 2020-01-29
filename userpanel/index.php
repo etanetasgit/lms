@@ -324,7 +324,7 @@ if ($SESSION->islogged) {
         try{
             $fbauth = new FBOAuth($DB);
             $facebookUri = $fbauth->GenCallbackURL();
-            if($facebookUuri){
+            if($facebookUri){
                 $SMARTY->assign("fb_login_url", $facebookUri);
             }
         } catch(Exception $fbe){
