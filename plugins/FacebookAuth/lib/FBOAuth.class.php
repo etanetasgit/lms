@@ -104,8 +104,8 @@ class FBOAuth {
     $fbuser = $response->getGraphUser();
     if(!$fbuser['email']){
       echo trans("Server error, code:")." 102326<br />";
-      echo trans("Error while fetching user info from facebook")."<br />";
-      error_log("Received empty user email from facebook, user: ",$fbuser["name"]);
+      echo trans("Error while fetching user info from Facebook")."<br />";
+      error_log("Received empty user email from Facebook, user: ",$fbuser["name"]);
       exit;
     }
 
