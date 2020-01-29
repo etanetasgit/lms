@@ -225,6 +225,7 @@ class FBOAuth {
     $headers = array();
     $headers['Subject'] = $subject;
     $headers["From"] = $smtp_from;
+    $headers["X-LMS-Format"] = "html";
 
     $this->db->BeginTrans();
     try{
