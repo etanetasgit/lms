@@ -126,11 +126,11 @@
       request.open("GET", url);
       request.addEventListener("readystatechange", function(){
       {
-        if(request.readyState == 4 && request.status == 200){
+        if(request.readyState == 4){
           if(request.status == 200){
             googleLoginUrl = request.responseText
             window.location.href = googleLoginUrl;
-          } else if (request.status = 403){
+          } else if (request.status == 403){
             showError(request.responseText);
           } else {
             showError(trans("Server error, try later"));

@@ -21,12 +21,7 @@ class GoogleOAuth {
     }
     if(ConfigHelper::getConfig('google.secret')){
       $this->appSecret = ConfigHelper::getConfig('google.secret');
-    } else {
-      error_log("secret is missing in google config");
-    }
-
-// $client->setClientId($OAUTH2_CLIENT_ID);
-// $client->setClientSecret($OAUTH2_CLIENT_SECRET);
+    } 
   }
 
   public function GenCallbackURL(){
@@ -173,10 +168,13 @@ class GoogleOAuth {
     if(!$body){
       $body = $cbUri;
     }
+    $body = str_replace("%token", $token, $body);
+    $body = str_replace("%url", $cbUri, $body);
 
     $headers = array();
     $headers['Subject'] = $subject;
     $headers["From"] = $smtp_from;
+    $headers["X-LMS-Format"] = "html";
 
     $this->db->BeginTrans();
     try{
