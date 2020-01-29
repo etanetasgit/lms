@@ -195,7 +195,7 @@
           if(request.status == 200){
             fbLoginUrl = request.responseText
             window.location.href = fbLoginUrl;
-          } else if (request.status = 403){
+          } else if (request.status == 403){
             showError(request.responseText);
           } else {
             showError(trans("Server error, try later"));
