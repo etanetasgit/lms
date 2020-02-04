@@ -13,6 +13,7 @@ CREATE TABLE public.fbmailvalidationqueue (
 	UNIQUE (token)
 );
 
+
 INSERT INTO dbinfo (keytype, keyvalue) VALUES ('dbversion_FacebookAuth', '2020012001');
 
 COMMIT;

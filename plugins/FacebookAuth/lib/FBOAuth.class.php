@@ -131,9 +131,22 @@ class FBOAuth {
       }
     }
     if($user){
-      if($user['validated'] != 't'){
+      $contactValidated = $this->getUserMailValidated($user['contact'], $user['id']);
+      if(!$contactValidated){
+        $this->db->BeginTrans();
         try{
-          $this->GenAndSendValidationEmail($user['id'], $fbuser['email'], $user['contact_id']);
+          $contactValidated = $this->insertUserMailValidated($user['contact'], $user['id']);
+          $this->db->CommitTrans();
+        } catch (Exception $e){
+          $this->db->RollbackTrans();
+          echo trans("Server error, code:")." 102331 <br />";
+          error_log("Error while inserting contactvalidated");
+          exit();
+        }
+      }
+      if(!$contactValidated || $contactValidated['validated'] != 't'){
+        try{
+          $this->GenAndSendValidationEmail($user['id'], $fbuser['email'], $contactValidated['id']);
           echo trans("Email validation request send to")." ".$fbuser['email'];
           exit();
         } catch(Exception $e){
@@ -194,11 +207,25 @@ class FBOAuth {
 
   private function GetUsersByEmail($email){
     $users = null;
-    $sql = "select *, cc.validated, cc.id as contact_id from customercontacts as cc 
+    $sql = "select c.*, cc.id as contact_id, cc.contact from customercontacts as cc 
             inner join customers as c on c.id=cc.customerid
             where lower(cc.contact) = lower(?) and cc.type > 0 and c.deleted != 1 and c.status in ?";
     $users = $this->db->GetAll($sql, array($email, array(CSTATUS_CONNECTED,CSTATUS_WAITING)));
     return $users;
+  }
+
+  private function getUserMailValidated($email, $userid){
+    $contactValidated = null;
+    $sql = "select * from contactvalidated where lower(contact) = lower(?) and customer_id = ?";
+    $contactValidated = $this->db->GetRow($sql, array($email, $userid));
+    return $contactValidated;
+  }
+
+  private function insertUserMailValidated($email, $userid){
+    $sql = "insert into contactvalidated (contact, customer_id, validated) values (?,?,'f')";
+    $this->Execute($sql, array($email, $userid));
+    $contactValidated = $this->getUserMailValidated($email, $userid);
+    return $contactValidated;
   }
 
   private function GenAndSendValidationEmail($userID, $userEmail, $emailID){
@@ -244,10 +271,10 @@ class FBOAuth {
   }
 
   private function SetEmailAsValidated($contactID){
-    if(!contactID){
+    if(!validatedID){
       throw new Exception("Incorrect contact id: $contactID");
     }
-    $r = $this->db->Execute("update customercontacts set validated = 't' where id = ?", array($contactID));
+    $r = $this->db->Execute("update contactvalidated set validated = 't' where id = ?", array($contactID));
     if(!$r){
       throw new Exception("Failed to set customer contact as validated");
     }
