@@ -71,9 +71,22 @@ class GoogleOAuth {
       }
     }
     if($user){
-      if($user['validated'] != 't'){
+      $contactValidated = $this->getUserMailValidated($user['contact'], $user['id']);
+      if(!$contactValidated){
+        $this->db->BeginTrans();
         try{
-          $this->GenAndSendValidationEmail($user['id'], $userinfo['email'], $user['contact_id']);
+          $contactValidated = $this->insertUserMailValidated($user['contact'], $user['id']);
+          $this->db->CommitTrans();
+        } catch (Exception $e){
+          $this->db->RollbackTrans();
+          echo trans("Server error, code:")." 102331 <br />";
+          error_log("Error while inserting contactvalidated");
+          exit();
+        }
+      }
+      if(!$contactValidated || $contactValidated['validated'] != 't'){
+        try{
+          $this->GenAndSendValidationEmail($user['id'], $userinfo['email'], $contactValidated['id']);
           echo trans("Email validation request send to")." ".$userinfo['email'];
           exit();
         } catch(Exception $e){
@@ -144,11 +157,31 @@ class GoogleOAuth {
 
   private function GetUsersByEmail($email){
     $users = null;
-    $sql = "select *, cc.validated, cc.id as contact_id from customercontacts as cc 
+    $sql = "select *, cc.id as contact_id from customercontacts as cc 
             inner join customers as c on c.id=cc.customerid
             where lower(cc.contact) = lower(?) and cc.type > 0 and c.deleted != 1 and c.status in ?";
     $users = $this->db->GetAll($sql, array($email, array(CSTATUS_CONNECTED,CSTATUS_WAITING)));
     return $users;
+  }
+
+  private function getUserMailValidated($email, $userid){
+    $contactValidated = null;
+    $sql = "select * from contactvalidated where lower(contact) = lower(?) and customer_id = ?";
+    $contactValidated = $this->db->GetRow($sql, array($email, $userid));
+    return $contactValidated;
+  }
+
+  private function insertUserMailValidated($email, $userid){
+    $sql = "insert into contactvalidated (contact, customer_id, validated) values (?,?,'f')";
+    $r = $this->db->Execute($sql, array($email, $userid));
+
+    if(!$r){
+      throw new Exception("Failed to insert into contactvalidated: ${$this->db->error}s");
+    }
+
+    $contactValidated = $this->getUserMailValidated($email, $userid);
+    
+    return $contactValidated;
   }
 
   private function GenAndSendValidationEmail($userID, $userEmail, $emailID){
@@ -196,7 +229,7 @@ class GoogleOAuth {
     if(!contactID){
       throw new Exception("Incorrect contact id: $contactID");
     }
-    $r = $this->db->Execute("update customercontacts set validated = 't' where id = ?", array($contactID));
+    $r = $this->db->Execute("update contactvalidated set validated = 't' where id = ?", array($contactID));
     if(!$r){
       throw new Exception("Failed to set customer contact as validated");
     }
@@ -228,7 +261,7 @@ class GoogleOAuth {
     VALUES (?,?,'f',?,?,?)
     ", array($emailID, $token, $expires, $now, $now));
     if(!$r){
-      throw new Exception("Failed to insert into googlemailvalidationqueue");
+      throw new Exception("Failed to insert into googlemailvalidationqueue ${$this->db->error}s");
     }
   }
 }
