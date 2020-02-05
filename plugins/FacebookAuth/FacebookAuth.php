@@ -12,7 +12,7 @@ class FacebookAuth extends LMSPlugin
     const PLUGIN_NAME = 'FacebookAuth';
     const PLUGIN_DESCRIPTION = 'Enables facebook OAuth login to userpanel';
     const PLUGIN_AUTHOR = 'Kšištof Vinčo &lt;ksistof.vinco@gmail.com&gt;';
-    const PLUGIN_DBVERSION = '2020012003';
+    const PLUGIN_DBVERSION = '2020020401';
     const plugin_directory_name = 'FacebookAuth';
 
     public function registerHandlers()
